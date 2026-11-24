@@ -16,6 +16,17 @@
 </head>
 <body>
 
+<div id="lock" class="lock" hidden>
+  <form class="lockbox" id="lockForm">
+    <div class="logo" style="margin:0 auto 14px">🔬</div>
+    <h2>NaWi</h2>
+    <p class="muted">Bitte Passwort eingeben</p>
+    <input id="lockPw" type="password" autocomplete="current-password" autocapitalize="off" placeholder="Passwort">
+    <p id="lockErr" class="lockerr" hidden>Falsches Passwort – nochmal versuchen.</p>
+    <button class="btn" type="submit" style="width:100%;margin-top:12px">Öffnen</button>
+  </form>
+</div>
+
 <header>
   <div class="logo">🔬</div>
   <div>

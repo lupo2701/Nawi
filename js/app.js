@@ -172,5 +172,19 @@ function confetti(){
   }
 }
 
+// --- Passwort-Sperre ---
+(function(){
+  if (typeof PASSWORT === "undefined" || !PASSWORT) return;
+  const ok = () => store.get("nawi_pw", "") === PASSWORT.toLowerCase();
+  if (ok()) return;
+  const lock = document.getElementById("lock"); lock.hidden = false;
+  document.getElementById("lockForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const v = document.getElementById("lockPw").value.trim().toLowerCase();
+    if (v === PASSWORT.toLowerCase()) { store.set("nawi_pw", v); lock.hidden = true; }
+    else { document.getElementById("lockErr").hidden = false; document.getElementById("lockPw").select(); }
+  });
+})();
+
 // --- Start ---
 renderLearn(); renderTermine(); startQuiz(); showTime();

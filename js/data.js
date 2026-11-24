@@ -2,6 +2,10 @@
  * INHALTE: Hier kannst du alles anpassen (Klasse, Pinnwand, Termine, Fakten, Quiz).
  * Nach dem Speichern auf GitHub sehen alle Schüler die neue Version.
  */
+// Passwort für die App (Groß-/Kleinschreibung egal). Leer lassen ("") = keine Sperre.
+// Hinweis: Das ist nur eine einfache Sperre – der Code auf GitHub ist öffentlich.
+const PASSWORT = "nawi";
+
 // Klasse und Lehrkraft
 const KLASSE = "Klasse 7b";
 const LEHRER = "Herr Muster";
