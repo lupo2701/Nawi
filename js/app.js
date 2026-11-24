@@ -54,25 +54,29 @@ function markLearned(){
   if (!days.includes(k)) { days.push(k); store.set("nawi_learned", days); confetti(); }
   renderLearn(); if (typeof renderUmfrage === "function") renderUmfrage();
 }
+// Wochen-Logik: eine Woche gilt als „gelernt“, wenn in ihr mindestens einmal gelernt wurde
+function mondayOf(d){ const m = new Date(d); m.setHours(0,0,0,0); m.setDate(m.getDate() - (m.getDay()+6)%7); return m; }
+function learnedWeeks(){ return new Set(learnedDays().map(k => localKey(mondayOf(new Date(k+"T00:00:00"))))); }
 function streak(){
-  const days = new Set(learnedDays()); let n = 0; const d = today();
-  if (!days.has(localKey(d))) d.setDate(d.getDate()-1); // heute zählt noch nicht als verpasst
-  while (days.has(localKey(d))) { n++; d.setDate(d.getDate()-1); }
+  const weeks = learnedWeeks(); let n = 0; const d = mondayOf(today());
+  if (!weeks.has(localKey(d))) d.setDate(d.getDate()-7); // diese Woche zählt noch nicht als verpasst
+  while (weeks.has(localKey(d))) { n++; d.setDate(d.getDate()-7); }
   return n;
 }
 function renderLearn(){
-  const days = new Set(learnedDays()); const done = days.has(localKey(today()));
+  const weeks = learnedWeeks(); const done = weeks.has(localKey(mondayOf(today())));
   const card = document.getElementById("remCard");
   card.classList.toggle("done", done);
+  const n = streak();
   document.getElementById("remText").innerHTML = done
-    ? "Stark, heute schon gelernt! 🎉 Deine Serie: <b>" + streak() + " Tag(e)</b>"
-    : "Habt ihr heute schon NaWi gelernt? 🤔 Ein paar Minuten reichen!";
+    ? "Stark, diese Woche schon gelernt! 🎉 Eure Serie: <b>" + n + (n === 1 ? " Woche" : " Wochen") + "</b>"
+    : "Habt ihr diese Woche schon NaWi gelernt? 🤔 Ein bisschen Lernen bis Sonntag reicht!";
   document.getElementById("remBtns").style.display = done ? "none" : "flex";
-  document.getElementById("streak").textContent = streak();
-  const names = ["So","Mo","Di","Mi","Do","Fr","Sa"]; let html = "";
-  for (let i = 6; i >= 0; i--) {
-    const d = today(); d.setDate(d.getDate()-i); const on = days.has(localKey(d));
-    html += `<div class="day"><div class="dot ${on?"on":""}">${on?"✓":""}</div>${i===0?"Heute":names[d.getDay()]}</div>`;
+  document.getElementById("streak").textContent = n;
+  let html = "";
+  for (let i = 5; i >= 0; i--) {
+    const m = mondayOf(today()); m.setDate(m.getDate()-7*i); const on = weeks.has(localKey(m));
+    html += `<div class="day"><div class="dot ${on?"on":""}">${on?"✓":""}</div>${i===0?"Diese":"KW "+weekNumber(m)}</div>`;
   }
   document.getElementById("week").innerHTML = html;
 }
@@ -193,7 +197,7 @@ function renderUmfrage(){
   const st = weekStats(); const kwKey = "KW" + kw + "-" + new Date().getFullYear();
   document.getElementById("umfrageKw").textContent = "KW " + kw;
   document.getElementById("wochenStats").innerHTML =
-    `<div class="stat"><b>${st.days}</b><span>Tage gelernt</span></div>` +
+    `<div class="stat"><b>${st.min}</b><span>Minuten Lern-Timer</span></div>` +
     `<div class="stat"><b>${st.opened}</b><span>Tage App genutzt</span></div>` +
     `<div class="stat"><b>${st.quiz}</b><span>Quizrunden</span></div>`;
   document.getElementById("umfrageFragen").innerHTML = UMFRAGE.fragen.map(f => `<li>${escapeHTML(f)}</li>`).join("");

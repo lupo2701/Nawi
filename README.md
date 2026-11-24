@@ -1,6 +1,6 @@
 # 🔬 NaWi – unsere Klassen-App
 
-Lern-App für den NaWi-Unterricht: Pinnwand, Fakt der Woche, Lern-Check mit Serie 🔥, Termine mit Countdown, Lern-Timer und Quiz.
+Lern-App für den NaWi-Unterricht: Pinnwand, Fakt der Woche, Wochen-Lern-Check mit Serie 🔥, Wochen-Umfrage, Termine mit Countdown, Lern-Timer und Quiz.
 Läuft komplett im Browser, ohne Anmeldung und ohne Server. Die Lern-Serie wird nur lokal auf dem Gerät gespeichert.
 
 **App öffnen:** https://lupo2701.github.io/Nawi/
