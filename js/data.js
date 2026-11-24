@@ -7,7 +7,7 @@
 const PASSWORT = "nawi";
 
 // Klasse und Lehrkraft
-const KLASSE = "Klasse 7b";
+const KLASSE = "Klasse 8.5";
 const LEHRER = "Herr Muster";
 
 // Pinnwand – Nachricht an die Klasse (einfach Text ändern)
@@ -15,6 +15,20 @@ const PINNWAND = "Unser Thema: Ernährung 🍎 Am 11.12. schreiben wir die Klaus
 
 // Link zur Lernapp (Button auf der Startseite)
 const LERNAPP = { name: "Der Weg der Nahrung", url: "https://lupo2701.github.io/Lernapp-Nawi/" };
+
+// Wöchentliche Umfrage
+// link: Link zu deiner Umfrage (z. B. IServ-Umfrage, Microsoft Forms, Google Forms).
+//       Leer lassen ("") = die Karte zeigt „Umfrage kommt bald“.
+// fragen: werden in der App als Vorschau angezeigt – stell sie in deiner Umfrage genauso.
+const UMFRAGE = {
+  link: "",
+  fragen: [
+    "An wie vielen Tagen hast du diese Woche gelernt?",
+    "Wie oft hast du die NaWi-App diese Woche benutzt?",
+    "Wie sicher fühlst du dich für die Klausur? (1 = gar nicht, 5 = sehr sicher)",
+    "Was fällt dir beim Thema Ernährung noch schwer?",
+  ],
+};
 
 // Termine für die ganze Klasse (Format: JJJJ-MM-TT) – einfach ändern oder ergänzen
 const FESTE_TERMINE = [

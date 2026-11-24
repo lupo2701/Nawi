@@ -52,7 +52,7 @@ function learnedDays(){ return store.get("nawi_learned", []); }
 function markLearned(){
   const days = learnedDays(); const k = localKey(today());
   if (!days.includes(k)) { days.push(k); store.set("nawi_learned", days); confetti(); }
-  renderLearn();
+  renderLearn(); if (typeof renderUmfrage === "function") renderUmfrage();
 }
 function streak(){
   const days = new Set(learnedDays()); let n = 0; const d = today();
@@ -129,7 +129,7 @@ function toggleTimer(){
   iv = setInterval(() => {
     left--; showTime();
     if (left <= 0) { clearInterval(iv); iv = null; b.textContent = "▶️ Start"; left = total; showTime();
-      markLearned(); document.getElementById("timer").textContent = "Fertig! 🎉"; }
+      logEvent("timer", Math.round(total/60)); markLearned(); document.getElementById("timer").textContent = "Fertig! 🎉"; }
   }, 1000);
 }
 function resetTimer(){ clearInterval(iv); iv = null; left = total; showTime(); document.getElementById("tBtn").textContent = "▶️ Start"; }
@@ -141,6 +141,7 @@ function renderQuiz(){
   const c = document.getElementById("quizCard");
   if (qi >= order.length) {
     const best = Math.max(store.get("nawi_best",0), score); store.set("nawi_best", best);
+    logEvent("quiz", 1);
     const msg = score === order.length ? "Perfekt! Ein echter NaWi-Profi 🏆" : score >= order.length/2 ? "Gut gemacht – weiter so! 👍" : "Dranbleiben, das kriegen wir hin! 💪";
     if (score === order.length) confetti();
     c.innerHTML = `<h2>🧠 Ergebnis</h2><p class="streak" style="text-align:center">${score} / ${order.length}</p>
@@ -172,6 +173,43 @@ function confetti(){
   }
 }
 
+// --- Wochen-Statistik & Umfrage ---
+function weekStart(){ const d = today(); const wd = (d.getDay()+6)%7; d.setDate(d.getDate()-wd); return d; }
+function logEvent(type, n){
+  const log = store.get("nawi_log", []); log.push({ t:type, n, d: localKey(today()) });
+  store.set("nawi_log", log.slice(-500)); renderUmfrage();
+}
+function weekStats(){
+  const ws = localKey(weekStart());
+  const log = store.get("nawi_log", []).filter(e => e.d >= ws);
+  const days = learnedDays().filter(d => d >= ws).length;
+  const quiz = log.filter(e => e.t === "quiz").reduce((a,e) => a+e.n, 0);
+  const min = log.filter(e => e.t === "timer").reduce((a,e) => a+e.n, 0);
+  const opened = new Set(store.get("nawi_opened", []).filter(d => d >= ws)).size;
+  return { days, quiz, min, opened };
+}
+function renderUmfrage(){
+  if (typeof UMFRAGE === "undefined") { document.getElementById("umfrageCard").style.display = "none"; return; }
+  const st = weekStats(); const kwKey = "KW" + kw + "-" + new Date().getFullYear();
+  document.getElementById("umfrageKw").textContent = "KW " + kw;
+  document.getElementById("wochenStats").innerHTML =
+    `<div class="stat"><b>${st.days}</b><span>Tage gelernt</span></div>` +
+    `<div class="stat"><b>${st.opened}</b><span>Tage App genutzt</span></div>` +
+    `<div class="stat"><b>${st.quiz}</b><span>Quizrunden</span></div>`;
+  document.getElementById("umfrageFragen").innerHTML = UMFRAGE.fragen.map(f => `<li>${escapeHTML(f)}</li>`).join("");
+  const done = store.get("nawi_umfrage", "") === kwKey;
+  const btns = document.getElementById("umfrageBtns");
+  if (!UMFRAGE.link) { btns.innerHTML = `<p class="muted">Die Umfrage für diese Woche kommt bald. 📬</p>`; return; }
+  btns.innerHTML = done
+    ? `<p class="done-note">✅ Danke, du hast diese Woche schon mitgemacht!</p>`
+    : `<a class="btn link" id="umfrageLink" href="${escapeHTML(UMFRAGE.link)}" target="_blank" rel="noopener">📝 Zur Umfrage</a>
+       <button class="btn sec" id="umfrageDone">Erledigt ✓</button>`;
+  if (!done) {
+    document.getElementById("umfrageDone").onclick = () => { store.set("nawi_umfrage", kwKey); confetti(); renderUmfrage(); };
+  }
+}
+(function(){ const o = store.get("nawi_opened", []); const k = localKey(today()); if (!o.includes(k)) { o.push(k); store.set("nawi_opened", o.slice(-120)); } })();
+
 // --- Passwort-Sperre ---
 (function(){
   if (typeof PASSWORT === "undefined" || !PASSWORT) return;
@@ -187,4 +225,4 @@ function confetti(){
 })();
 
 // --- Start ---
-renderLearn(); renderTermine(); startQuiz(); showTime();
+renderLearn(); renderTermine(); renderUmfrage(); startQuiz(); showTime();
