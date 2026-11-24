@@ -27,6 +27,8 @@ function go(p){
   document.getElementById("klasse").textContent = KLASSE;
   document.getElementById("lehrer").textContent = LEHRER;
   document.getElementById("pinnwand").textContent = PINNWAND;
+  const l = document.getElementById("lernapp");
+  if (typeof LERNAPP !== "undefined" && LERNAPP.url) { l.href = LERNAPP.url; l.querySelector("b").textContent = LERNAPP.name; } else l.style.display = "none";
 })();
 
 // --- Fakt der Woche ---
@@ -134,7 +136,7 @@ function resetTimer(){ clearInterval(iv); iv = null; left = total; showTime(); d
 
 // --- Quiz ---
 let qi = 0, score = 0, order = [];
-function startQuiz(){ order = [...QUIZ].sort(() => Math.random()-0.5); qi = 0; score = 0; renderQuiz(); }
+function startQuiz(){ order = [...QUIZ].sort(() => Math.random()-0.5).slice(0,10); qi = 0; score = 0; renderQuiz(); }
 function renderQuiz(){
   const c = document.getElementById("quizCard");
   if (qi >= order.length) {
