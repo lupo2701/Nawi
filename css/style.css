@@ -87,3 +87,11 @@ nav button.active{color:var(--accent)}
 .ubar .track{grid-column:1/-1;height:8px;background:var(--card2);border-radius:9px;overflow:hidden}
 .ubar .track div{height:100%;background:var(--accent);border-radius:9px}
 .ubar b{color:var(--text);text-align:right;white-space:nowrap}
+.lcchart{display:flex;gap:8px;align-items:flex-end;height:150px;margin-top:16px}
+.lccol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.lccol .bar{width:100%;max-width:56px;background:var(--card2);border-radius:10px 10px 4px 4px;min-height:6px;transition:height .4s}
+.lccol.has .bar{background:var(--accent)}
+.lccol.now .bar{background:var(--accent2)}
+.lccol .val{font-size:13px;font-weight:700;margin-bottom:4px;white-space:nowrap}
+.lccol .lbl{font-size:11px;color:var(--muted);margin-top:6px;white-space:nowrap}
+.trend{margin-top:12px;font-weight:600}

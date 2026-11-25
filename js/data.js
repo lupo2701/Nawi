@@ -18,6 +18,7 @@ const LERNAPP = { name: "Der Weg der Nahrung", url: "https://lupo2701.github.io/
 
 // Handzeichen-Umfrage (Reiter „Umfrage“)
 // Du fragst in der Klasse per Handzeichen ab und tippst die Anzahl ein.
+// Die 1. Frage ist dieselbe wie im Wochen-Lern-Check auf der Startseite (beide Stellen zeigen dieselbe Zahl).
 // Die Ergebnisse werden nur auf dem Gerät gespeichert, auf dem du sie eingibst (z. B. dein iPad).
 const UMFRAGE = {
   fragen: [

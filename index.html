@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <title>NaWi – unsere Klassen-App</title>
-<link rel="stylesheet" href="css/style.css?v=202611251345">
+<link rel="stylesheet" href="css/style.css?v=202611251352">
 </head>
 <body>
 
@@ -46,13 +46,16 @@
     </div>
 
     <div class="card reminder" id="remCard">
-      <h2>⏰ Unser Wochen-Lern-Check</h2>
-      <p id="remText">Habt ihr diese Woche schon NaWi gelernt?</p>
-      <div class="row" id="remBtns">
-        <button class="btn" onclick="markLearned()">✅ Ja, hab ich!</button>
-        <button class="btn sec" onclick="go('lernen')">⏱️ Lasst uns lernen</button>
-      </div>
-      <div class="week" id="week"></div>
+      <h2>⏰ Unser Wochen-Lern-Check <span class="tag" id="lcKw"></span></h2>
+      <p id="remText">Wie viele haben diese Woche NaWi gelernt?</p>
+      <div class="urow"><label for="lcAnw">👥 Anwesend</label>
+        <div class="stepper"><button class="btn sec" data-lc="lcAnw" data-d="-1">−</button><input id="lcAnw" type="number" inputmode="numeric" min="0" max="99" placeholder="0"><button class="btn sec" data-lc="lcAnw" data-d="1">+</button></div></div>
+      <div class="urow"><label for="lcGel">📚 Haben gelernt</label>
+        <div class="stepper"><button class="btn sec" data-lc="lcGel" data-d="-1">−</button><input id="lcGel" type="number" inputmode="numeric" min="0" max="99" placeholder="0"><button class="btn sec" data-lc="lcGel" data-d="1">+</button></div></div>
+      <div class="row"><button class="btn" id="lcSave">💾 Speichern</button></div>
+      <p class="done-note" id="lcSaved" hidden></p>
+      <div class="lcchart" id="lcChart"></div>
+      <p class="trend" id="lcTrend"></p>
     </div>
 
     <div class="card fact-card">
@@ -135,7 +138,7 @@
   <button data-p="umfrage" onclick="go('umfrage')"><span>📊</span>Umfrage</button>
 </nav>
 
-<script src="js/data.js?v=202611251345"></script>
-<script src="js/app.js?v=202611251345"></script>
+<script src="js/data.js?v=202611251352"></script>
+<script src="js/app.js?v=202611251352"></script>
 </body>
 </html>

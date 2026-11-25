@@ -63,23 +63,53 @@ function streak(){
   while (weeks.has(localKey(d))) { n++; d.setDate(d.getDate()-7); }
   return n;
 }
-function renderLearn(){
-  const weeks = learnedWeeks(); const done = weeks.has(localKey(mondayOf(today())));
-  const card = document.getElementById("remCard");
-  card.classList.toggle("done", done);
-  const n = streak();
-  document.getElementById("remText").innerHTML = done
-    ? "Stark, diese Woche schon gelernt! 🎉 Eure Serie: <b>" + n + (n === 1 ? " Woche" : " Wochen") + "</b>"
-    : "Habt ihr diese Woche schon NaWi gelernt? 🤔 Ein bisschen Lernen bis Sonntag reicht!";
-  document.getElementById("remBtns").style.display = done ? "none" : "flex";
-  document.getElementById("streak").textContent = n;
-  let html = "";
-  for (let i = 5; i >= 0; i--) {
-    const m = mondayOf(today()); m.setDate(m.getDate()-7*i); const on = weeks.has(localKey(m));
-    html += `<div class="day"><div class="dot ${on?"on":""}">${on?"✓":""}</div>${i===0?"Diese":"KW "+weekNumber(m)}</div>`;
-  }
-  document.getElementById("week").innerHTML = html;
+// Persönliche Serie (Lern-Timer) – wird im Reiter „Lernen“ angezeigt
+function renderLearn(){ document.getElementById("streak").textContent = streak(); }
+
+// Wochen-Lern-Check: Lehrkraft trägt ein, wie viele gelernt haben (= 1. Frage der Umfrage)
+function weekKeyOf(m){ const t = new Date(m); t.setDate(t.getDate()+3); return t.getFullYear() + "-KW" + String(weekNumber(m)).padStart(2,"0"); }
+function renderLernCheck(){
+  const data = store.get("nawi_hands", {}); const thisMon = mondayOf(today());
+  const cur = data[weekKeyOf(thisMon)];
+  const keys = Object.keys(data).sort(); const last = keys[keys.length-1];
+  document.getElementById("lcKw").textContent = "KW " + kw;
+  document.getElementById("lcAnw").value = cur ? cur.anw : (last ? data[last].anw : "");
+  document.getElementById("lcGel").value = cur && cur.werte[0] != null ? cur.werte[0] : "";
+  document.getElementById("lcSave").textContent = cur ? "💾 KW " + kw + " aktualisieren" : "💾 Für KW " + kw + " speichern";
+  document.getElementById("remCard").classList.toggle("done", !!cur);
+  // Diagramm der letzten 6 Wochen (Anteil in %)
+  const cols = []; for (let i = 5; i >= 0; i--) { const m = new Date(thisMon); m.setDate(m.getDate()-7*i); const e = data[weekKeyOf(m)];
+    const g = e ? Number(e.werte[0]) || 0 : null, n = e ? Number(e.anw) || 0 : 0;
+    cols.push({ lbl: i === 0 ? "Diese" : "KW " + weekNumber(m), g, n, pc: e && n ? Math.round(g/n*100) : (e ? 0 : null), now: i === 0 }); }
+  document.getElementById("lcChart").innerHTML = cols.map(c => `<div class="lccol ${c.g != null ? "has" : ""} ${c.now && c.g != null ? "now" : ""}">
+      <div class="val">${c.g != null ? c.g + (c.n ? "/" + c.n : "") : ""}</div>
+      <div class="bar" style="height:${c.pc != null ? Math.max(4, Math.min(c.pc,100)) : 4}%"></div>
+      <div class="lbl">${c.lbl}</div></div>`).join("");
+  // Trend: aktuelle Woche mit der letzten gespeicherten Woche davor vergleichen
+  const tr = document.getElementById("lcTrend");
+  const prevKey = keys.filter(k => k < weekKeyOf(thisMon)).pop();
+  if (cur && prevKey) {
+    const a = Number(cur.werte[0]) || 0, b = Number(data[prevKey].werte[0]) || 0, d = a - b;
+    tr.textContent = d > 0 ? `📈 ${d} mehr als ${prevKey.split("-")[1].replace("KW","KW ")} – super, weiter so!`
+      : d < 0 ? `📉 ${-d} weniger als ${prevKey.split("-")[1].replace("KW","KW ")} – nächste Woche packen wir das!`
+      : `➡️ Genauso viele wie ${prevKey.split("-")[1].replace("KW","KW ")}.`;
+  } else tr.textContent = cur ? "" : "Noch nicht eingetragen – kurz per Handzeichen abfragen ✋";
 }
+document.getElementById("remCard").addEventListener("click", e => {
+  const b = e.target.closest("[data-lc]"); if (!b) return;
+  const inp = document.getElementById(b.dataset.lc); inp.value = Math.max(0, (Number(inp.value) || 0) + Number(b.dataset.d));
+});
+document.getElementById("lcSave").addEventListener("click", () => {
+  const num = id => { const v = document.getElementById(id).value; return v === "" ? 0 : Math.max(0, Math.round(Number(v))); };
+  const data = store.get("nawi_hands", {}); const k = weekKeyOf(mondayOf(today()));
+  const e = data[k] || { werte: UMFRAGE.fragen.map(() => null), fragen: UMFRAGE.fragen.slice() };
+  e.anw = num("lcAnw"); e.werte[0] = num("lcGel"); e.datum = today().toLocaleDateString("de-DE");
+  data[k] = e; store.set("nawi_hands", data);
+  renderLernCheck(); renderUmfrage();
+  const msg = document.getElementById("lcSaved");
+  msg.textContent = "✅ Gespeichert für KW " + kw + (e.anw && e.werte[0] > e.anw ? " – Achtung: mehr als anwesend." : "");
+  msg.hidden = false; setTimeout(() => msg.hidden = true, 4000);
+});
 
 // --- Termine ---
 function allTermine(){
@@ -184,7 +214,7 @@ function logEvent(type, n){
   store.set("nawi_log", log.slice(-500));
 }
 // Handzeichen-Umfrage: Lehrkraft tippt pro Frage die Anzahl ein, gespeichert pro KW
-const uKey = () => new Date().getFullYear() + "-KW" + String(kw).padStart(2,"0");
+const uKey = () => weekKeyOf(mondayOf(today()));
 function uData(){ return store.get("nawi_hands", {}); }
 function renderUmfrage(){
   if (typeof UMFRAGE === "undefined") return;
@@ -205,11 +235,11 @@ function renderVerlauf(){
     const e = data[k]; const n = Number(e.anw) || 0;
     return `<div class="ukw"><div class="ukw-head">${escapeHTML(k.split("-")[1].replace("KW","KW "))} <span class="muted">· ${escapeHTML(e.datum)} · ${n} anwesend</span>
       <button class="del" style="margin-left:auto" title="Löschen" onclick="delUmfrage('${k}')">✕</button></div>
-      ${(e.fragen || UMFRAGE.fragen).map((f,i) => { const v = Number(e.werte[i]) || 0; const pc = n ? Math.round(v/n*100) : 0;
+      ${(e.fragen || UMFRAGE.fragen).map((f,i) => { const v = Number(e.werte[i]) || 0; if (e.werte[i] == null) return ""; const pc = n ? Math.round(v/n*100) : 0;
         return `<div class="ubar"><span>${escapeHTML(f)}</span><b>${v}${n ? " von " + n + " · " + pc + " %" : ""}</b><div class="track"><div style="width:${Math.min(pc,100)}%"></div></div></div>`; }).join("")}
     </div>`; }).join("") : `<p class="muted">Noch keine Ergebnisse gespeichert.</p>`;
 }
-function delUmfrage(k){ const d = uData(); delete d[k]; store.set("nawi_hands", d); renderUmfrage(); }
+function delUmfrage(k){ const d = uData(); delete d[k]; store.set("nawi_hands", d); renderUmfrage(); renderLernCheck(); }
 document.getElementById("p-umfrage").addEventListener("click", e => {
   const b = e.target.closest("[data-step]"); if (!b) return;
   const inp = document.getElementById(b.dataset.step === "anw" ? "uAnw" : "uQ" + b.dataset.step);
@@ -222,7 +252,7 @@ document.getElementById("uSave").addEventListener("click", () => {
   const d = uData();
   d[uKey()] = { anw, werte, fragen: UMFRAGE.fragen.slice(), datum: today().toLocaleDateString("de-DE") };
   store.set("nawi_hands", d);
-  renderUmfrage();
+  renderUmfrage(); renderLernCheck();
   const msg = document.getElementById("uSaved");
   msg.textContent = "✅ Gespeichert für KW " + kw + (werte.some(v => anw && v > anw) ? " – Achtung: eine Zahl ist größer als die Anwesenden." : "");
   msg.hidden = false; setTimeout(() => msg.hidden = true, 4000);
@@ -253,4 +283,4 @@ document.getElementById("uCopy").addEventListener("click", () => {
 })();
 
 // --- Start ---
-renderLearn(); renderTermine(); renderUmfrage(); startQuiz(); showTime();
+renderLearn(); renderLernCheck(); renderTermine(); renderUmfrage(); startQuiz(); showTime();
