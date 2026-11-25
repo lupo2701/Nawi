@@ -52,7 +52,7 @@ function learnedDays(){ return store.get("nawi_learned", []); }
 function markLearned(){
   const days = learnedDays(); const k = localKey(today());
   if (!days.includes(k)) { days.push(k); store.set("nawi_learned", days); confetti(); }
-  renderLearn(); if (typeof renderUmfrage === "function") renderUmfrage();
+  renderLearn();
 }
 // Wochen-Logik: eine Woche gilt als „gelernt“, wenn in ihr mindestens einmal gelernt wurde
 function mondayOf(d){ const m = new Date(d); m.setHours(0,0,0,0); m.setDate(m.getDate() - (m.getDay()+6)%7); return m; }
@@ -181,37 +181,61 @@ function confetti(){
 function weekStart(){ const d = today(); const wd = (d.getDay()+6)%7; d.setDate(d.getDate()-wd); return d; }
 function logEvent(type, n){
   const log = store.get("nawi_log", []); log.push({ t:type, n, d: localKey(today()) });
-  store.set("nawi_log", log.slice(-500)); renderUmfrage();
+  store.set("nawi_log", log.slice(-500));
 }
-function weekStats(){
-  const ws = localKey(weekStart());
-  const log = store.get("nawi_log", []).filter(e => e.d >= ws);
-  const days = learnedDays().filter(d => d >= ws).length;
-  const quiz = log.filter(e => e.t === "quiz").reduce((a,e) => a+e.n, 0);
-  const min = log.filter(e => e.t === "timer").reduce((a,e) => a+e.n, 0);
-  const opened = new Set(store.get("nawi_opened", []).filter(d => d >= ws)).size;
-  return { days, quiz, min, opened };
-}
+// Handzeichen-Umfrage: Lehrkraft tippt pro Frage die Anzahl ein, gespeichert pro KW
+const uKey = () => new Date().getFullYear() + "-KW" + String(kw).padStart(2,"0");
+function uData(){ return store.get("nawi_hands", {}); }
 function renderUmfrage(){
-  if (typeof UMFRAGE === "undefined") { document.getElementById("umfrageCard").style.display = "none"; return; }
-  const st = weekStats(); const kwKey = "KW" + kw + "-" + new Date().getFullYear();
-  document.getElementById("umfrageKw").textContent = "KW " + kw;
-  document.getElementById("wochenStats").innerHTML =
-    `<div class="stat"><b>${st.min}</b><span>Minuten Lern-Timer</span></div>` +
-    `<div class="stat"><b>${st.opened}</b><span>Tage App genutzt</span></div>` +
-    `<div class="stat"><b>${st.quiz}</b><span>Quizrunden</span></div>`;
-  document.getElementById("umfrageFragen").innerHTML = UMFRAGE.fragen.map(f => `<li>${escapeHTML(f)}</li>`).join("");
-  const done = store.get("nawi_umfrage", "") === kwKey;
-  const btns = document.getElementById("umfrageBtns");
-  if (!UMFRAGE.link) { btns.innerHTML = `<p class="muted">Die Umfrage für diese Woche kommt bald. 📬</p>`; return; }
-  btns.innerHTML = done
-    ? `<p class="done-note">✅ Danke, du hast diese Woche schon mitgemacht!</p>`
-    : `<a class="btn link" id="umfrageLink" href="${escapeHTML(UMFRAGE.link)}" target="_blank" rel="noopener">📝 Zur Umfrage</a>
-       <button class="btn sec" id="umfrageDone">Erledigt ✓</button>`;
-  if (!done) {
-    document.getElementById("umfrageDone").onclick = () => { store.set("nawi_umfrage", kwKey); confetti(); renderUmfrage(); };
-  }
+  if (typeof UMFRAGE === "undefined") return;
+  const data = uData(), cur = data[uKey()];
+  document.getElementById("uKw").textContent = "KW " + kw;
+  const last = Object.keys(data).sort().pop();
+  document.getElementById("uAnw").value = cur ? cur.anw : (last ? data[last].anw : "");
+  document.getElementById("uFragen").innerHTML = UMFRAGE.fragen.map((f,i) => `
+    <div class="urow"><label for="uQ${i}">${escapeHTML(f)}</label>
+      <div class="stepper"><button class="btn sec" data-step="${i}" data-d="-1">−</button><input id="uQ${i}" type="number" inputmode="numeric" min="0" max="99" value="${cur && cur.werte[i] != null ? cur.werte[i] : ""}" placeholder="0"><button class="btn sec" data-step="${i}" data-d="1">+</button></div></div>`).join("");
+  document.getElementById("uSave").textContent = cur ? "💾 KW " + kw + " aktualisieren" : "💾 Für KW " + kw + " speichern";
+  renderVerlauf();
 }
+function renderVerlauf(){
+  const data = uData(); const keys = Object.keys(data).sort().reverse();
+  document.getElementById("uCopyRow").hidden = !keys.length;
+  document.getElementById("uVerlauf").innerHTML = keys.length ? keys.map(k => {
+    const e = data[k]; const n = Number(e.anw) || 0;
+    return `<div class="ukw"><div class="ukw-head">${escapeHTML(k.split("-")[1].replace("KW","KW "))} <span class="muted">· ${escapeHTML(e.datum)} · ${n} anwesend</span>
+      <button class="del" style="margin-left:auto" title="Löschen" onclick="delUmfrage('${k}')">✕</button></div>
+      ${(e.fragen || UMFRAGE.fragen).map((f,i) => { const v = Number(e.werte[i]) || 0; const pc = n ? Math.round(v/n*100) : 0;
+        return `<div class="ubar"><span>${escapeHTML(f)}</span><b>${v}${n ? " von " + n + " · " + pc + " %" : ""}</b><div class="track"><div style="width:${Math.min(pc,100)}%"></div></div></div>`; }).join("")}
+    </div>`; }).join("") : `<p class="muted">Noch keine Ergebnisse gespeichert.</p>`;
+}
+function delUmfrage(k){ const d = uData(); delete d[k]; store.set("nawi_hands", d); renderUmfrage(); }
+document.getElementById("p-umfrage").addEventListener("click", e => {
+  const b = e.target.closest("[data-step]"); if (!b) return;
+  const inp = document.getElementById(b.dataset.step === "anw" ? "uAnw" : "uQ" + b.dataset.step);
+  inp.value = Math.max(0, (Number(inp.value) || 0) + Number(b.dataset.d));
+});
+document.getElementById("uSave").addEventListener("click", () => {
+  const num = id => { const v = document.getElementById(id).value; return v === "" ? 0 : Math.max(0, Math.round(Number(v))); };
+  const anw = num("uAnw");
+  const werte = UMFRAGE.fragen.map((_,i) => num("uQ" + i));
+  const d = uData();
+  d[uKey()] = { anw, werte, fragen: UMFRAGE.fragen.slice(), datum: today().toLocaleDateString("de-DE") };
+  store.set("nawi_hands", d);
+  renderUmfrage();
+  const msg = document.getElementById("uSaved");
+  msg.textContent = "✅ Gespeichert für KW " + kw + (werte.some(v => anw && v > anw) ? " – Achtung: eine Zahl ist größer als die Anwesenden." : "");
+  msg.hidden = false; setTimeout(() => msg.hidden = true, 4000);
+});
+document.getElementById("uCopy").addEventListener("click", () => {
+  const data = uData();
+  const txt = Object.keys(data).sort().map(k => { const e = data[k];
+    return k + " (" + e.datum + ", " + e.anw + " anwesend)\n" + (e.fragen || UMFRAGE.fragen).map((f,i) => "- " + f + " " + e.werte[i]).join("\n"); }).join("\n\n");
+  const b = document.getElementById("uCopy");
+  try { navigator.clipboard.writeText(txt).then(() => b.textContent = "✅ Kopiert!", () => b.textContent = "Kopieren nicht möglich"); }
+  catch(e){ b.textContent = "Kopieren nicht möglich"; }
+  setTimeout(() => b.textContent = "📋 Ergebnisse kopieren", 2500);
+});
 (function(){ const o = store.get("nawi_opened", []); const k = localKey(today()); if (!o.includes(k)) { o.push(k); store.set("nawi_opened", o.slice(-120)); } })();
 
 // --- Passwort-Sperre ---

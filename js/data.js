@@ -16,17 +16,15 @@ const PINNWAND = "Unser Thema: Ernährung 🍎 Am 11.12. schreiben wir die Klaus
 // Link zur Lernapp (Button auf der Startseite)
 const LERNAPP = { name: "Der Weg der Nahrung", url: "https://lupo2701.github.io/Lernapp-Nawi/" };
 
-// Wöchentliche Umfrage
-// link: Link zu deiner Umfrage (z. B. IServ-Umfrage, Microsoft Forms, Google Forms).
-//       Leer lassen ("") = die Karte zeigt „Umfrage kommt bald“.
-// fragen: werden in der App als Vorschau angezeigt – stell sie in deiner Umfrage genauso.
+// Handzeichen-Umfrage (Reiter „Umfrage“)
+// Du fragst in der Klasse per Handzeichen ab und tippst die Anzahl ein.
+// Die Ergebnisse werden nur auf dem Gerät gespeichert, auf dem du sie eingibst (z. B. dein iPad).
 const UMFRAGE = {
-  link: "",
   fragen: [
-    "An wie vielen Tagen hast du diese Woche gelernt?",
-    "Wie oft hast du die NaWi-App diese Woche benutzt?",
-    "Wie sicher fühlst du dich für die Klausur? (1 = gar nicht, 5 = sehr sicher)",
-    "Was fällt dir beim Thema Ernährung noch schwer?",
+    "Wer hat diese Woche für NaWi gelernt?",
+    "Wer hat die NaWi-App diese Woche benutzt?",
+    "Wer fühlt sich schon sicher für die Klausur?",
+    "Wer möchte ein Thema noch einmal wiederholen?",
   ],
 };
 
