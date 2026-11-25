@@ -22,7 +22,7 @@ const LERNAPP = { name: "Der Weg der Nahrung", url: "https://lupo2701.github.io/
 // Die Ergebnisse werden nur auf dem Gerät gespeichert, auf dem du sie eingibst (z. B. dein iPad).
 const UMFRAGE = {
   fragen: [
-    "Wer hat diese Woche für NaWi gelernt?",
+    "Wer hat diese Woche mit der Lernapp gelernt?",
     "Wer hat die NaWi-App diese Woche benutzt?",
     "Wer fühlt sich schon sicher für die Klausur?",
     "Wer möchte ein Thema noch einmal wiederholen?",

@@ -66,7 +66,7 @@ function streak(){
 // Persönliche Serie (Lern-Timer) – wird im Reiter „Lernen“ angezeigt
 function renderLearn(){ document.getElementById("streak").textContent = streak(); }
 
-// Wochen-Lern-Check: Lehrkraft trägt ein, wie viele gelernt haben (= 1. Frage der Umfrage)
+// Wochen-Lern-Check: Lehrkraft trägt ein, wie viele mit der Lernapp gelernt haben (= 1. Frage der Umfrage)
 function weekKeyOf(m){ const t = new Date(m); t.setDate(t.getDate()+3); return t.getFullYear() + "-KW" + String(weekNumber(m)).padStart(2,"0"); }
 function renderLernCheck(){
   const data = store.get("nawi_hands", {}); const thisMon = mondayOf(today());
@@ -235,7 +235,7 @@ function renderVerlauf(){
     const e = data[k]; const n = Number(e.anw) || 0;
     return `<div class="ukw"><div class="ukw-head">${escapeHTML(k.split("-")[1].replace("KW","KW "))} <span class="muted">· ${escapeHTML(e.datum)} · ${n} anwesend</span>
       <button class="del" style="margin-left:auto" title="Löschen" onclick="delUmfrage('${k}')">✕</button></div>
-      ${(e.fragen || UMFRAGE.fragen).map((f,i) => { const v = Number(e.werte[i]) || 0; if (e.werte[i] == null) return ""; const pc = n ? Math.round(v/n*100) : 0;
+      ${UMFRAGE.fragen.map((f,i) => { const v = Number(e.werte[i]) || 0; if (e.werte[i] == null) return ""; const pc = n ? Math.round(v/n*100) : 0;
         return `<div class="ubar"><span>${escapeHTML(f)}</span><b>${v}${n ? " von " + n + " · " + pc + " %" : ""}</b><div class="track"><div style="width:${Math.min(pc,100)}%"></div></div></div>`; }).join("")}
     </div>`; }).join("") : `<p class="muted">Noch keine Ergebnisse gespeichert.</p>`;
 }
